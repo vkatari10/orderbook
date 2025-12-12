@@ -37,7 +37,7 @@ struct Order {
         recv_time(order_time_placed)
     {}
 
-    Side side_;
+    Side side;
     OrderType order_type;
     std::string ticker; 
     uint64_t price;
