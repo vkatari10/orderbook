@@ -1,3 +1,3 @@
 #! /usr/bin/bash
-g++ -Iinclude main.cpp -o main.out
+g++ -Iinclude -O2 main.cpp -o main.out
 ./main.out

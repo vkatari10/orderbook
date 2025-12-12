@@ -5,15 +5,7 @@
 #include <chrono>
 #include <iostream>
 
-enum struct Side : uint8_t {
-    BUY = 0,
-    SELL = 1
-};
-
-enum struct OrderType : uint8_t {
-    MARKET = 0, 
-    LIMIT = 1
-};
+#include "enums.hpp"
 
 struct Order {
 
