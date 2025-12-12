@@ -27,7 +27,18 @@ struct Order {
         cid(client_id),
         oid(order_id),
         recv_time(order_time_placed)
-    {}
+    {} 
+
+    friend std::ostream& operator<<(std::ostream& os, const Order& order) {
+        std::cout << "Order Side: "<< static_cast<int>(order.side) << std::endl;
+        std::cout << "Order Type: " << static_cast<int>(order.order_type) << std::endl;
+        std::cout << "Price: " << order.price << std::endl;
+        std::cout << "Quantity: " << order.qty << std::endl;
+        std::cout << "Client ID: " << order.cid << std::endl;
+        std::cout << "Order ID: " << order.oid << std::endl;
+        std::cout << "Received: " << order.recv_time << std::endl;
+        return os;
+    }
 
     Side side;
     OrderType order_type;

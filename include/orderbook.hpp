@@ -9,6 +9,7 @@
 
 #include "order.hpp"
 #include "trade.hpp"
+#include "enums.hpp"
 
 
 class OrderBook {
@@ -17,23 +18,19 @@ public:
     OrderBook(const std::string& ticker) : ticker_(ticker) {};
     
     /**
-     * @brief adds a buy order to the orderbook
+     * @brief adds an order to the orderbook
      * 
-     * @param order the order to add
+     * @param order order to add
      */
-    void add_buy_order(Order&& order) { // pass by value; caller can choose to pass r/lvalue
-        bids_[order.price].push_back(std::move(order));
+    void add_order(Order&& order) {
+        if (order.side == Side::BUY)  // convert to branchless later (hashmap with ref to bids/asks)
+            bids_[order.price].push_back(std::move(order));
+        else {
+            asks_[order.price].push_back(std::move(order));
+        }
     }
 
-    /**
-     * @brief adds a sell order to the orderbook
-     * 
-     * @param order the order to add
-     */
-    void add_sell_order(Order&& order) { // pass by value; caller can choose to pass r/lvalue
-        asks_[order.price].push_back(std::move(order));
-    }
-
+    void remove_order(Order&& order);
 
 
 
@@ -41,18 +38,32 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
 
         std::cout << "BIDS" << std::endl;
+        std::cout << std::endl;
 
         for (const auto& [k, v] : ob.bids_) {
-            std::cout << k << std::endl;
+            std::cout << "For Price Level: " << k << std::endl;
+            std::cout << std::endl;
 
-            for (const auto& order : ob.bids_[k]) {
-
+            for (const auto& order : v) {
+                std::cout << order << std::endl;
             }
 
-
+            std::cout << std::endl;
         }
 
         std::cout << "ASKS" << std::endl;
+        std::cout << std::endl;
+
+         for (const auto& [k, v] : ob.asks_) {
+            std::cout << "Price Level: " << k << std::endl;
+            std::cout << std::endl;
+
+            for (const auto& order : v) {
+                std::cout << order << std::endl;
+            }
+
+            std::cout << std::endl;
+        }
 
         return os;
     }
