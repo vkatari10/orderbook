@@ -1,3 +1,3 @@
 #! /usr/bin/bash
-g++ -Iinclude -O2 main.cpp -o main.out
+g++ -Iinclude -std=c++20 -O2 src/orderbook.cpp main.cpp -o main.out 
 ./main.out

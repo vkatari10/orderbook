@@ -1,6 +1,5 @@
 #include "orderbook.hpp"
 
-
 #include <iostream>
 #include <utility>
 
@@ -22,6 +21,12 @@ int main() {
     ob.add_order(std::move(my_order));
 
     std::cout << ob << std::endl;
+
+    ob.remove_order(std::move(my_order));
+
+    std::cout << ob << std::endl;
+
+    
 
     return 0;
 }
