@@ -5,9 +5,9 @@
 #include <string>
 #include <vector>
 
-#include "order.hpp"
-#include "trade.hpp"
-#include "enums.hpp"
+#include "shared/order.hpp"
+#include "shared/trade.hpp"
+#include "shared/enums.hpp"
 
 
 class OrderBook {

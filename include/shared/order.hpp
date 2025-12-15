@@ -40,25 +40,13 @@ struct Order {
         return os;
     }
 
-    Side side;
-    OrderType order_type;
-    std::string ticker; 
     uint64_t price;
     uint64_t qty; 
     uint64_t cid; // client id 
     uint64_t oid; // order (specific) id
     uint64_t recv_time; // time order was placed
+    Side side;
+    OrderType order_type;
+    std::string ticker; 
+  
 };
-
-
-//     Order my_order(
-//         Side::BUY, 
-//         OrderType::LIMIT,
-//         "AAPL",
-//         static_cast<uint64_t>(5), 
-//         static_cast<uint64_t>(5), 
-//         static_cast<uint64_t>(5), 
-//         static_cast<uint64_t>(5), 
-//         static_cast<uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now().time_since_epoch()).count())
-//     );
-

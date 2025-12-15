@@ -11,4 +11,5 @@ project( # also required line after setting the version
 
 set(CMAKE_CXX_STANDARD 20) # equivalent to -std=c++20
 
-add_executable(main main.cpp src/orderbook.cpp) 
+add_subdirectory(apps/orderbook)
+add_subdirectory(src/orderbook)
