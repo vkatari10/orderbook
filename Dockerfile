@@ -27,6 +27,12 @@ RUN --mount=type=cache,target=/vcpkg/downloads,id=vcpkg-downloads \
     --mount=type=cache,target=/vcpkg/packages,id=vcpkg-packages \
      /vcpkg/vcpkg install --triplet x64-linux
 
+RUN mkdir -p app/build
+RUN useradd -m dev
+RUN chown -R dev:dev /vcpkg
+
+USER dev
+
 COPY . .
 
 CMD ["bash"]
