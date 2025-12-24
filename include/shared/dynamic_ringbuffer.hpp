@@ -23,7 +23,7 @@ public:
      * 
      * @param size the initialized size of the ring buffer
      */
-    explicit DynamicRingBuffer(int size) :
+    explicit DynamicRingBuffer(unsigned long long size) :
         buf_(new T[size]),
         size_(size),
         head_(0),
@@ -39,7 +39,7 @@ public:
      * 
      * @param item the item to insert into the ring buffer
      */
-    void insert(T item) {
+    void enqueue(T item) {
 
         if (item_count_ + 1 > size_) {
             resize_();
@@ -53,14 +53,22 @@ public:
     /** 
      * @brief removes and returns the item from the ring buffer
      * 
-     * @return T the item removed from the ring buffer
+     * @return the item removed from the ring buffer
      */
-    T dequeue() {
+    void dequeue() {
         if (empty()) throw std::logic_error("buffer is empty, no items to deque");
-        T item = std::move(buf_[head_]);
         head_ = (head_ + 1) % size_;
         --item_count_;
-        return item;
+    }
+
+    /**
+     * @brief returns the front item in the list from the ring buffer 
+     * 
+     * @return the first item in the ring buffer
+     */
+    [[nodiscard]] T peek() const {
+        if (empty()) throw std::logic_error("buffer is empty, no items to peek");
+        return buf_[head_];
     }
 
     /**
@@ -84,14 +92,14 @@ public:
     /**
      * @brief returns the number of items currently in the buffer
      */
-    uint64_t items() const {
+    uint64_t items() const noexcept {
         return item_count_;
     }
 
     /**
      * @brief returns the size of the underlying array in the buffer
      */
-    uint64_t capacity() const {
+    uint64_t capacity() const noexcept {
         return size_;
     }
 
@@ -123,6 +131,13 @@ public:
     // TODO: implement shrink method to shrink underlying array to item count
     void shrink();
 
+    T* front() const {
+        return &buf_[head_];
+    }
+
+    T* back() const {
+        return &buf_[tail_];
+    }
 
 private:
 

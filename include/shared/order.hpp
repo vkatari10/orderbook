@@ -8,6 +8,20 @@
 #include "enums.hpp"
 
 struct Order {
+    
+    // DO NOT use this to construct ORDER objects,
+    // purely for array allocation purposes 
+    Order() 
+    : price(0),
+      qty(0),
+      cid(0),
+      oid(0),
+      recv_time(0),
+      side(Side::BUY),
+      order_type(OrderType::MARKET),
+      ticker(),
+      alive(0) 
+    {}
 
     Order(
         Side side,
@@ -17,7 +31,8 @@ struct Order {
         uint64_t quantity,
         uint64_t client_id, 
         uint64_t order_id, 
-        uint64_t order_time_placed
+        uint64_t order_time_placed,
+        uint8_t alive
     ) :
         side(side),
         order_type(order_type),
@@ -26,7 +41,8 @@ struct Order {
         qty(quantity),
         cid(client_id),
         oid(order_id),
-        recv_time(order_time_placed)
+        recv_time(order_time_placed),
+        alive(1)
     {} 
 
     friend std::ostream& operator<<(std::ostream& os, const Order& order) {
@@ -37,6 +53,7 @@ struct Order {
         std::cout << "Client ID: " << order.cid << std::endl;
         std::cout << "Order ID: " << order.oid << std::endl;
         std::cout << "Received: " << order.recv_time << std::endl;
+        std::cout << "Alive? " << static_cast<int>(order.alive) << std::endl;
         return os;
     }
 
@@ -48,5 +65,6 @@ struct Order {
     Side side;
     OrderType order_type;
     std::string ticker; 
+    uint8_t alive; // if order is valid or not 
   
 };

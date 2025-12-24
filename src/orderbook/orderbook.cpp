@@ -1,27 +1,33 @@
-#include "../../include/orderbook/orderbook.hpp"
 #include <algorithm>
 #include <ostream>
 
+#include "orderbook/orderbook.hpp"
+#include "shared/dynamic_ringbuffer.hpp"
+
 void OrderBook::add_order(Order order) {
     if (order.side == Side::BUY) { // convert to branchless later (hashmap with ref to bids/asks)
-        bids_[order.price].push_back(std::move(order));
+        bids_[order.price].enqueue(std::move(order));
+        orders_[order.oid] = bids_[order.price].back();
     } else {
-        asks_[order.price].push_back(std::move(order));
+        asks_[order.price].enqueue(std::move(order));
+        orders_[order.oid] = asks_[order.price].back();
     }
 }
 
-void OrderBook::remove_order(Order order) {
-    if (order.side == Side::BUY) {
-        remove_order_helper(bids_, std::move(order));
-    } else {
-        remove_order_helper(asks_, std::move(order));
-    }
+void OrderBook::cancel_order(const Order& order) {
+    auto it = orders_.find(order.oid);
+    if (it == orders_.end()) return;
+
+    it->second->alive = 0;
+    orders_.erase(it);
 }
 
-void OrderBook::remove_order_helper(std::map<uint64_t, std::deque<Order>>& orderbook, Order&& order) {
-    erase_if(orderbook[order.price], [&](const Order& o){
-        return (o.oid == order.oid); 
-    });
+void OrderBook::remove_order(uint64_t price_level, Side side) {    
+    if (side == Side::BUY) {
+        bids_[price_level].dequeue();
+    } else {
+        asks_[price_level].dequeue();
+    }
 }
 
 // TODO: replace std::endl with "\n" later, left endl for debug purposes
@@ -36,7 +42,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
             os << order << std::endl;
         }
         os << std::endl;
-    }
+    }  
 
     os << "ASKS" << std::endl;
     os << std::endl;
@@ -52,7 +58,6 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
         os << std::endl;
 
     }
-
     return os;
 }
 
