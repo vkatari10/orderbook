@@ -1,31 +1,48 @@
 #include <iostream>
 
-#include <orderbook/orderbook.hpp>
+#include <matching-engine/matching_engine.hpp>
 
+#define NL "\n" 
+using std::cout;
 
 int main() {
     
-    OrderBook ob("XYZ");
+    MatchingEngine me("XYZ");
+   
 
-    Order my_order = Order(
+    Order buyside = Order(
         Side::BUY, 
-        OrderType::MARKET,
+        OrderType::LIMIT,
         "XYZ",
+        10, // price
         10,
         10,
-        10,
-        10,
+        987654321,
         10,
         1
     );
 
-    ob.add_order(my_order);
+     Order sellside = Order(
+        Side::SELL, 
+        OrderType::LIMIT,
+        "XYZ",
+        5,
+        10,
+        10,
+        987654321,
+        10,
+        1
+    );
 
-    std::cout << ob << std::endl;
+    me.on_order(sellside);
+    me.on_order(buyside);
 
-    ob.cancel_order(my_order);
+    for (const auto i : me.ledger()) {
+        cout << i << NL;
+    }
 
-    std::cout << ob << std::endl;
+    cout << me.ledger().size() << NL;
+
 
 
     return 0;

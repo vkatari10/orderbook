@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 #include <string>
+#include <ostream>
 
 #include "enums.hpp"
 
@@ -37,6 +38,17 @@ struct Trade {
         return_code(0),
         ticker(ticker)
     {}
+
+    friend std::ostream& operator<<(std::ostream& os, const Trade& trade) {
+        os << "bid client id " << trade.bcid << "\n";
+        os << "ask client id " << trade.acid << "\n";
+        os << "trade id " << trade.tid << "\n";
+        os << "qty filled " << trade.qty << "\n";
+        os << "price filled " << trade.price << "\n";
+        os << "return code " << trade.return_code << "\n";
+        os << "ticker " << trade.ticker << "\n";
+        return os;
+    }
 
     uint64_t bcid; // bidder client id
     uint64_t acid; // asker client id

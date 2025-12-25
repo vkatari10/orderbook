@@ -2,15 +2,16 @@
 #include <ostream>
 
 #include "orderbook/orderbook.hpp"
-#include "shared/dynamic_ringbuffer.hpp"
 
 void OrderBook::add_order(Order order) {
     if (order.side == Side::BUY) { // convert to branchless later (hashmap with ref to bids/asks)
-        bids_[order.price].enqueue(std::move(order));
-        orders_[order.oid] = bids_[order.price].back();
+        bids_[order.price].enqueue(std::move(order)); // putting order into orderbook
+
+        // k, v: oid : last item in orderbook at that price in the ring buffer
+        orders_[order.oid] = bids_[order.price].back_ptr(); 
     } else {
         asks_[order.price].enqueue(std::move(order));
-        orders_[order.oid] = asks_[order.price].back();
+        orders_[order.oid] = asks_[order.price].back_ptr();
     }
 }
 
@@ -24,8 +25,10 @@ void OrderBook::cancel_order(const Order& order) {
 
 void OrderBook::remove_order(uint64_t price_level, Side side) {    
     if (side == Side::BUY) {
+        orders_.erase(bids_[price_level].peek().oid);
         bids_[price_level].dequeue();
-    } else {
+    } else {    
+        orders_.erase(asks_[price_level].peek().oid);
         asks_[price_level].dequeue();
     }
 }
@@ -38,9 +41,7 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     for (const auto& [k, v] : ob.bids()) {
         os << "For Price Level: " << k << std::endl;
         os << std::endl;
-        for (const auto& order : v) {
-            os << order << std::endl;
-        }
+        os << v << std::endl;
         os << std::endl;
     }  
 
@@ -48,15 +49,10 @@ std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     os << std::endl;
 
     for (const auto& [k, v] : ob.asks()) {
+        if (k == std::numeric_limits<uint64_t>::max()) continue;
         os << "Price Level: " << k << std::endl;
         os << std::endl;
-
-        for (const auto& order : v) {
-            os << order << std::endl;
-        }
-
-        os << std::endl;
-
+        os << v << std::endl;
     }
     return os;
 }

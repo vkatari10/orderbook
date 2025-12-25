@@ -147,9 +147,7 @@ private:
     uint64_t tail_;
     uint64_t item_count_;
 
-    /**
-     * @brief resizes the underlying array if the ring buffer is full 
-     */
+    /** @brief resizes the underlying array if the ring buffer is full */
     void resize_() {
         T* new_arr = new T[size_ * 2];
 

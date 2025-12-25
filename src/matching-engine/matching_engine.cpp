@@ -1,50 +1,18 @@
 #include "matching-engine/matching_engine.hpp"
 #include <algorithm>
 
-// 1. try and match the order if possible and generate trade object to the ledger
-//      for now the ledger is just kinda there but not being broadcast
-//      will figure out later how to work with it 
-// 2. if not possible to match then shove the order into the orderbook and leave it 
-void MatchingEngine::on_order(Order order) {
+void MatchingEngine::on_order(Order& order) {
 
     // NOTE: Orderbook already places orders on bid/ask side 
     // we do not need to handle it here just various order types
     if (order.order_type == OrderType::LIMIT) {
-
-        Trade result = handle_limit_(order);
-
-        if (result.return_code != -1) {
-            
-        }
-
+        handle_limit_(order);
     } else if (order.order_type == OrderType::MARKET) {
-
-        Trade result = handle_market_(order);
-
-        if (result.return_code != -1) {
-
-        }
-
+        handle_market_(order);
     }
-
-    /**
-     * if the order can be matched then the order
-     * should be immediatley matched and all 
-     * other bid, ask prices should be updated 
-     * and the trade object should be generated and 
-     * pushed out to the people who need to get it 
-     */
-
-     /** 
-      * if the order cannot be matched then it should just 
-      * be placed onto the orderbook and left there at some price level  
-      */
-
 }
 
-
-
-Trade MatchingEngine::handle_market_(Order order) {
+void MatchingEngine::handle_market_(Order& order) {
 
     if (order.side == Side::BUY) { // walk down the asks if possible for each qty possible
 
@@ -52,61 +20,52 @@ Trade MatchingEngine::handle_market_(Order order) {
 
     }
 
-    return Trade(); // remove once impl
+    
 }
 
-Trade MatchingEngine::handle_limit_(Order order) {
-
+void MatchingEngine::handle_limit_(Order& order) {
     if (order.side == Side::BUY) {
-
-        // WHAT IF the map is empty?? then what do we compare? 
-        // might need to add like 0 and max val just to be on the 
-        // safe side?
         if (order.price >= orderbook_.best_ask()) { 
-       
+            ledger_.push_back(match_limit_order_(order, orderbook_.best_ask_order(), Side::BUY));
         } else {
             orderbook_.add_order(order);
         }
-       
-    } else { // Side::SELL
-
+    } else {
         if (order.price <= orderbook_.best_bid()) {
-            // match
+            ledger_.push_back(match_limit_order_(orderbook_.best_bid_order(), order, Side::SELL));
         } else {
             orderbook_.add_order(order);
         }
-    
     }
-    
-    return Trade(); // remove once impl
-
 }
 
-Trade MatchingEngine::match_order_(
-    Order bid_order, 
-    Order ask_order, 
-    uint64_t price,
+Trade MatchingEngine::match_limit_order_(
+    Order& bid_order, 
+    Order& ask_order, 
     Side aggressor) {
 
-        uint64_t filled_qty{};
+        uint64_t filled_qty{ std::min(bid_order.qty, ask_order.qty) };
+        bid_order.qty -= filled_qty;
+        ask_order.qty -= filled_qty;
+        on_order_qty_zero_(bid_order);
+        on_order_qty_zero_(ask_order);
+
+        uint64_t fill_price{};
 
         if (aggressor == Side::BUY) { // bid order was aggressor
-
-
-            return create_trade_(bid_order, ask_order, 1, price);
+            fill_price = std::min(bid_order.price, ask_order.price);
+            return create_trade_(bid_order, ask_order, filled_qty, fill_price);
         } else { // asking order was aggressor
-
-
-            // REPLACE 1 with actual filled qty!
-            return create_trade_(bid_order, ask_order, 1, price);
+            fill_price = std::max(bid_order.price, ask_order.price);
+            return create_trade_(bid_order, ask_order, filled_qty, fill_price);
         }
 
-
+        last_price_ = fill_price;
 }
 
 Trade MatchingEngine::create_trade_(
-    Order bid_order, 
-    Order ask_order, 
+    const Order& bid_order, 
+    const Order& ask_order, 
     uint64_t filled_qty, 
     uint64_t trade_price) {
 
@@ -116,7 +75,12 @@ Trade MatchingEngine::create_trade_(
         static_cast<uint64_t>(1), // this is the trade id we will need some static atomic variable we can increment to track trade orders
         filled_qty,
         trade_price,
-        1, // return code
+        1, // trade obj return code; check docs for more info
         bid_order.ticker
     );
+}
+
+void MatchingEngine::on_order_qty_zero_(const Order& order) {
+    if (order.qty != 0) return;
+    orderbook_.remove_order(order.price, order.side);
 }
