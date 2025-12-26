@@ -1,10 +1,9 @@
 #include "matching-engine/matching_engine.hpp"
 #include <algorithm>
 
-void MatchingEngine::on_order(Order& order) {
+#include <iostream>
 
-    // NOTE: Orderbook already places orders on bid/ask side 
-    // we do not need to handle it here just various order types
+void MatchingEngine::process(Order& order) {
     if (order.order_type == OrderType::LIMIT) {
         handle_limit_(order);
     } else if (order.order_type == OrderType::MARKET) {
@@ -13,26 +12,27 @@ void MatchingEngine::on_order(Order& order) {
 }
 
 void MatchingEngine::handle_market_(Order& order) {
-
     if (order.side == Side::BUY) { // walk down the asks if possible for each qty possible
 
     } else { // Side::SELL
 
     }
-
-    
 }
 
 void MatchingEngine::handle_limit_(Order& order) {
     if (order.side == Side::BUY) {
-        if (order.price >= orderbook_.best_ask()) { 
+        if (order.price >= orderbook_.best_ask()) { // can match
             ledger_.push_back(match_limit_order_(order, orderbook_.best_ask_order(), Side::BUY));
+            on_order_qty_zero_(order);
+            on_order_qty_zero_(orderbook_.best_ask_order());
         } else {
             orderbook_.add_order(order);
         }
-    } else {
+    } else { // Side::SELL
         if (order.price <= orderbook_.best_bid()) {
             ledger_.push_back(match_limit_order_(orderbook_.best_bid_order(), order, Side::SELL));
+            on_order_qty_zero_(order);
+            on_order_qty_zero_(orderbook_.best_bid_order());
         } else {
             orderbook_.add_order(order);
         }
@@ -47,20 +47,21 @@ Trade MatchingEngine::match_limit_order_(
         uint64_t filled_qty{ std::min(bid_order.qty, ask_order.qty) };
         bid_order.qty -= filled_qty;
         ask_order.qty -= filled_qty;
-        on_order_qty_zero_(bid_order);
-        on_order_qty_zero_(ask_order);
 
-        uint64_t fill_price{};
-
-        if (aggressor == Side::BUY) { // bid order was aggressor
-            fill_price = std::min(bid_order.price, ask_order.price);
-            return create_trade_(bid_order, ask_order, filled_qty, fill_price);
-        } else { // asking order was aggressor
-            fill_price = std::max(bid_order.price, ask_order.price);
-            return create_trade_(bid_order, ask_order, filled_qty, fill_price);
+        uint64_t fill_price{
+            (aggressor == Side::BUY) 
+            ? std::min(bid_order.price, ask_order.price) 
+            : std::max(bid_order.price, ask_order.price)
+        };
+        
+        if (aggressor == Side::BUY) {
+            on_part_fill_aggressive_limit_order_(bid_order);
+        } else {
+            on_part_fill_aggressive_limit_order_(ask_order);
         }
 
         last_price_ = fill_price;
+        return create_trade_(bid_order, ask_order, filled_qty, fill_price);
 }
 
 Trade MatchingEngine::create_trade_(
@@ -72,15 +73,24 @@ Trade MatchingEngine::create_trade_(
     return Trade(
         bid_order.cid,
         ask_order.cid,
-        static_cast<uint64_t>(1), // this is the trade id we will need some static atomic variable we can increment to track trade orders
+        static_cast<uint64_t>(1), // this is the trade id we will need some static increment variable
         filled_qty,
         trade_price,
-        1, // trade obj return code; check docs for more info
+        static_cast<int8_t>(1), // trade obj return code; check docs for more info
         bid_order.ticker
     );
 }
 
-void MatchingEngine::on_order_qty_zero_(const Order& order) {
-    if (order.qty != 0) return;
+void MatchingEngine::on_order_qty_zero_(Order& order) {
+    if (order.qty > 0) return;
+    std::cout << "removing order with id: " << order.oid << "\n";
     orderbook_.remove_order(order.price, order.side);
+}
+
+void MatchingEngine::on_part_fill_aggressive_limit_order_(Order& order) {
+    if (order.side == Side::BUY) {
+        orderbook_.add_order(order);
+    } else { // Side::SELL
+        orderbook_.add_order(order);
+    }
 }

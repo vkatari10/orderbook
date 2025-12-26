@@ -35,7 +35,7 @@ struct Trade {
         tid(trade_id),
         qty(quantity),
         price(price),
-        return_code(0),
+        return_code(return_code),
         ticker(ticker)
     {}
 
@@ -45,7 +45,7 @@ struct Trade {
         os << "trade id " << trade.tid << "\n";
         os << "qty filled " << trade.qty << "\n";
         os << "price filled " << trade.price << "\n";
-        os << "return code " << trade.return_code << "\n";
+        os << "return code " << static_cast<int>(trade.return_code) << "\n";
         os << "ticker " << trade.ticker << "\n";
         return os;
     }
@@ -57,5 +57,4 @@ struct Trade {
     uint64_t price;
     int8_t return_code; // internal
     std::string ticker;
-
 };

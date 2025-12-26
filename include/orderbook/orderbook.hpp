@@ -1,7 +1,6 @@
 #pragma once
 
 #include <map>
-#include <deque>
 #include <string>
 #include <utility>
 #include <cstdint>
@@ -24,6 +23,11 @@ public:
         max_ask.price = std::numeric_limits<uint64_t>::max();
         max_ask.side = Side::SELL;
         add_order(max_ask);
+
+        Order min_ask;
+        min_ask.price = 0;
+        min_ask.side = Side::BUY;
+        add_order(min_ask);
     };
     
     /**

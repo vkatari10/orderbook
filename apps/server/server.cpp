@@ -26,7 +26,7 @@ int main() {
         Side::SELL, 
         OrderType::LIMIT,
         "XYZ",
-        5,
+        10,
         10,
         10,
         987654321,
@@ -34,16 +34,15 @@ int main() {
         1
     );
 
-    me.on_order(sellside);
-    me.on_order(buyside);
 
+    me.process(sellside);
+    me.process(buyside);
+   
     for (const auto i : me.ledger()) {
         cout << i << NL;
     }
 
     cout << me.ledger().size() << NL;
-
-
 
     return 0;
 }

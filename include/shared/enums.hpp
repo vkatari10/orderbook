@@ -8,5 +8,6 @@ enum struct Side : uint8_t {
 
 enum struct OrderType : uint8_t {
     MARKET = 0, 
-    LIMIT = 1
+    LIMIT = 1,
+    FILL_OR_KILL = 2
 };
