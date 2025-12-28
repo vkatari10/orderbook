@@ -13,6 +13,7 @@ int main() {
     Order buyside = Order(
         Side::SELL, 
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         10, // price
         10,
@@ -25,6 +26,7 @@ int main() {
      Order sellside = Order(
         Side::BUY, 
         OrderType::MARKET,
+        TIF::DAY,
         "XYZ",
         10,
         10,

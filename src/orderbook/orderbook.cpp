@@ -15,11 +15,11 @@ void OrderBook::add_order(Order order) {
 }  
 
 void OrderBook::cancel_order(const Order& order) {
-    if (order.alive == 0) return; // order already dead or filled 
+    if (order.status == 0) return; // order already dead or filled 
     auto order_it = orders_.find(order.oid);
     if (order_it == orders_.end()) return; // order DNE
 
-    order_it->second->alive = 0; // set to dead 
+    order_it->second->status = 0; // set to dead 
     orders_.erase(order_it); // erase from lookup map 
 
     if (order.side == Side::BUY) { // decrease qty at price level
