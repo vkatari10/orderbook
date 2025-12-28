@@ -12,6 +12,7 @@ TEST(MATCH_ENG_limit_order_test, test_diff_qty) {
     Order buyside = Order(
         Side::BUY, 
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         10, // price
         5, // qty
@@ -24,6 +25,7 @@ TEST(MATCH_ENG_limit_order_test, test_diff_qty) {
      Order sellside = Order(
         Side::SELL, 
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         10, // price
         10, // qty 
@@ -56,6 +58,7 @@ TEST(MATCH_ENG_limit_order_test, test_same_qty) {
     Order buyside = Order(
         Side::BUY, 
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         10, // price
         10,
@@ -68,6 +71,7 @@ TEST(MATCH_ENG_limit_order_test, test_same_qty) {
      Order sellside = Order(
         Side::SELL, 
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         10, // price
         10,

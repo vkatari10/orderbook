@@ -56,7 +56,7 @@ void MatchingEngine::match_LMT_buy_(Order& order) {
             Order& match = it->second.front(); // first order at this price 
             PriceLevel& level = it->second;
 
-            if (match.alive == 0) { // if order dead
+            if (match.status == 0) { // if order dead
                 level.consume_front(0);
                 continue;
             }
@@ -71,7 +71,7 @@ void MatchingEngine::match_LMT_buy_(Order& order) {
             match.qty -= filled_qty;
             order.qty -= filled_qty;
 
-            match.alive = 0; // set  order to dead since match complete 
+            match.status = 0; // set  order to dead since match complete 
             orderbook_.remove_order_ptr(match.oid);
 
             if (match.qty == 0) level.consume_front(filled_qty); // if this first order is empty
@@ -99,7 +99,7 @@ void MatchingEngine::match_LMT_sell_(Order& order) {
             Order& match = it->second.front();
             PriceLevel& level = it->second;
 
-            if (match.alive == 0) { // if order dead
+            if (match.status == 0) { // if order dead
                 level.consume_front(0);
                 continue;
             }
@@ -150,7 +150,7 @@ void MatchingEngine::match_MKT_buy_(Order& order) {
             PriceLevel& level = it->second;
             Order& match = level.front();
 
-            if (match.alive == 0) {
+            if (match.status == 0) {
                 // delete ordered already remove share count
                 level.consume_front(0); 
             }
@@ -181,7 +181,7 @@ void MatchingEngine::match_MKT_sell_(Order& order) {
             PriceLevel& level = it->second;
             Order& match = level.front();
 
-            if (match.alive == 0) {
+            if (match.status == 0) {
                 level.consume_front(0);
                 continue;
             }

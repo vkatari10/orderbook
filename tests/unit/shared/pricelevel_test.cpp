@@ -16,18 +16,19 @@ TEST(PriceLevelTests, TestPushPop) {
     Order order = Order(
         Side::BUY,
         OrderType::LIMIT,
+        TIF::DAY,
         "XYZ",
         1, // price
         2, // qty 
         3, // client id
         4, // order id 
         5, // time placed 
-        1 // alive 
+        1 // status 
     );
 
     pl.push_back(std::move(order));
 
-    EXPECT_EQ(pl.front().alive, 1);
+    EXPECT_EQ(pl.front().status, 1);
     EXPECT_EQ(pl.total_shares(), 2);
     EXPECT_EQ(pl.order_count(), 1);
     EXPECT_EQ(pl.empty(), 0);
@@ -39,5 +40,5 @@ TEST(PriceLevelTests, TestPushPop) {
     EXPECT_EQ(pl.full(), 0);
     EXPECT_EQ(pl.order_count(), 0);
     EXPECT_EQ(pl.total_shares(), 0);
-    EXPECT_EQ(pl.front().alive, 0);
+    EXPECT_EQ(pl.front().status, 0);
 }
