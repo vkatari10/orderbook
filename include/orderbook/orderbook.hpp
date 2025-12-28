@@ -77,6 +77,12 @@ public:
     /** @brief returns the best bidding price */
     uint64_t best_bid() const { return bids_.begin()->first; }
 
+    /** @brief returns the total numbers of ask shares  */
+    uint64_t asks_total_shares() const;
+
+    /** @brief returns the total number of bid shares */
+    uint64_t bids_total_shares() const;
+
 private:
     std::map<uint64_t, PriceLevel, std::greater<uint64_t>> bids_; // min heap 
     std::map<uint64_t, PriceLevel> asks_;

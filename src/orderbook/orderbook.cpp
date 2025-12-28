@@ -23,9 +23,9 @@ void OrderBook::cancel_order(const Order& order) {
     orders_.erase(order_it); // erase from lookup map 
 
     if (order.side == Side::BUY) { // decrease qty at price level
-        bids_.at(order.price).qty_count_ -= order.qty;
+        bids_.at(order.price).reduce_shares(order.qty);
     } else {
-        asks_.at(order.price).qty_count_ -= order.qty;
+        asks_.at(order.price).reduce_shares(order.qty);
     }
 }
 
@@ -34,12 +34,31 @@ void OrderBook::remove_order_ptr(uint64_t id) {
     if (it != orders_.end()) orders_.erase(id);
 }
 
+uint64_t OrderBook::asks_total_shares() const {
+    auto it = asks_.begin();
+    uint64_t shares{};
+    while(it != asks_.end()) { 
+        shares += it->second.total_shares();
+    }
+    return shares;
+}
+
+uint64_t OrderBook::bids_total_shares() const {
+    auto it = asks_.begin();
+    uint64_t shares{};
+    while(it != bids_.end()) { 
+        shares += it->second.total_shares();
+    }
+    return shares;
+}
+
 
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     os << "BIDS" << "\n";
     os << "\n";
 
     for (const auto& [k, v] : ob.bids()) {
+        if (k == 0) continue;
         os << "For Price Level: " << k << "\n";
         os << "\n";
         os << v << "\n";

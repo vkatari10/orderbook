@@ -13,13 +13,6 @@ using std::uint64_t, std::uint8_t;
 class PriceLevel {
 public:
 
-    /**
-     * @brief total number of shares at this point.
-     * NOTE: this variable is public but should only be 
-     * modified by an OrderBook object
-     */
-    uint64_t qty_count_;
-
     PriceLevel() : rb_(), qty_count_(0) {}
 
     /**
@@ -37,6 +30,29 @@ public:
         qty_count_ -= front().qty;
         rb_.dequeue(); 
     }
+
+    /**
+     * @brief removes the first order and reduces 
+     * share count by the number of filled orders
+     * 
+     * @param filled the number of filled orders
+     */
+    void consume_front(uint64_t filled) noexcept {
+        qty_count_ -= filled;
+        rb_.dequeue();
+    }
+
+    /** 
+     * @brief reduces the number of total shares 
+     * 
+     * @param shares the number of shares to remove
+     * from this price level
+     */
+    void reduce_shares(uint64_t shares) noexcept {
+        if (shares > qty_count_) qty_count_ = 0;
+        qty_count_ -= shares;
+    }
+
 
     /** 
      * @brief returns the first order 
@@ -77,5 +93,6 @@ public:
 
 private:
     RingBuffer<Order, Config::ORDERBOOK_PRICE_LVL_RING_BUF_SIZE> rb_;
+    uint64_t qty_count_;
     
 };

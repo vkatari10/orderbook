@@ -10,3 +10,4 @@ The `.alive` field will give info about the current status of an order regarding
 | 1 | Alive, no shares filled, active | YES | 
 | 2 | Partially filled, active | YES | 
 | 3 | Filled, no longer active | NO | 
+| 4 | Dead, could not fill shares, no longer active | NO | 

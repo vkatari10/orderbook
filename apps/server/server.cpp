@@ -11,7 +11,7 @@ int main() {
    
 
     Order buyside = Order(
-        Side::BUY, 
+        Side::SELL, 
         OrderType::LIMIT,
         "XYZ",
         10, // price
@@ -23,8 +23,8 @@ int main() {
     );
 
      Order sellside = Order(
-        Side::SELL, 
-        OrderType::LIMIT,
+        Side::BUY, 
+        OrderType::MARKET,
         "XYZ",
         10,
         10,
@@ -36,14 +36,13 @@ int main() {
 
 
     
+
+    
     me.process(buyside);
     me.process(sellside);
-   
-    for (const auto i : me.ledger()) {
-        cout << i << NL;
-    }
 
-    cout << me.ledger().size() << NL;
+    cout << "ledger size atm: " <<  me.ledger().size() << NL;
 
-    return 0;
+    cout << "orderbook: " << NL << me.orderbook() << NL;
+
 }

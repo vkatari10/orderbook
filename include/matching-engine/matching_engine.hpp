@@ -51,6 +51,8 @@ public:
     /** @brief returns the inbound ring buffer */
     const RingBuffer<Order, Config::MATCH_ENGINE_INBOUND_RING_BUF_SIZE> orders() const { return orders_; }
 
+    
+
 private:
 
     uint64_t last_price_; // last market trade price 

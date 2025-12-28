@@ -1,13 +1,13 @@
 #include "matching-engine/matching_engine.hpp"
 #include <algorithm>
 
-#include <iostream>
+#include <iostream> // DEBUG 
 
 void MatchingEngine::process(Order& order) {
     if (order.order_type == OrderType::LIMIT) {
         handle_LMT_(order);
     } else if (order.order_type == OrderType::MARKET) {
-        // handle_market_(order);
+        handle_MKT_(order);
     }
 }
 
@@ -57,7 +57,7 @@ void MatchingEngine::match_LMT_buy_(Order& order) {
             PriceLevel& level = it->second;
 
             if (match.alive == 0) { // if order dead
-                level.pop_front();
+                level.consume_front(0);
                 continue;
             }
 
@@ -73,10 +73,8 @@ void MatchingEngine::match_LMT_buy_(Order& order) {
 
             match.alive = 0; // set  order to dead since match complete 
             orderbook_.remove_order_ptr(match.oid);
-            
-            level.qty_count_ -= filled_qty;
 
-            if (match.qty == 0) level.pop_front(); // if this first order is empty
+            if (match.qty == 0) level.consume_front(filled_qty); // if this first order is empty
         } 
 
         ++it; // move to next price
@@ -102,7 +100,7 @@ void MatchingEngine::match_LMT_sell_(Order& order) {
             PriceLevel& level = it->second;
 
             if (match.alive == 0) { // if order dead
-                level.pop_front();
+                level.consume_front(0);
                 continue;
             }
 
@@ -117,9 +115,7 @@ void MatchingEngine::match_LMT_sell_(Order& order) {
             match.qty -= filled_qty;
             order.qty -= filled_qty;
 
-            level.qty_count_ -= filled_qty;
-
-            if (match.qty == 0) level.pop_front();
+            if (match.qty == 0) level.consume_front(filled_qty);
         } 
 
         ++it;
@@ -155,8 +151,8 @@ void MatchingEngine::match_MKT_buy_(Order& order) {
             Order& match = level.front();
 
             if (match.alive == 0) {
-                level.pop_front();
-                continue;
+                // delete ordered already remove share count
+                level.consume_front(0); 
             }
 
             const uint64_t filled_qty{ std::min(order.qty, match.qty) };
@@ -167,13 +163,11 @@ void MatchingEngine::match_MKT_buy_(Order& order) {
 
             match.qty -= filled_qty;
             order.qty -= filled_qty;
-            
-            level.qty_count_ -= filled_qty;
 
-            if (match.qty == 0) level.pop_front();
-        }
-
-    } 
+            if (match.qty == 0) level.consume_front(filled_qty);
+        } 
+        ++it;
+    }   
 }
 
 void MatchingEngine::match_MKT_sell_(Order& order) {
@@ -188,7 +182,7 @@ void MatchingEngine::match_MKT_sell_(Order& order) {
             Order& match = level.front();
 
             if (match.alive == 0) {
-                level.pop_front();
+                level.consume_front(0);
                 continue;
             }
 
@@ -201,9 +195,8 @@ void MatchingEngine::match_MKT_sell_(Order& order) {
             match.qty -= filled_qty;
             order.qty -= filled_qty;
             
-            level.qty_count_ -= filled_qty;
-
-            if (match.qty == 0) level.pop_front();
+            if (match.qty == 0) level.consume_front(filled_qty);
         }
+        ++it;
     } 
 }
