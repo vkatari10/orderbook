@@ -1,7 +1,9 @@
 add_executable(unit_tests
-    shared/dynamic_ringbuffer_test.cpp
+
     shared/ringbuffer_test.cpp
+    shared/pricelevel_test.cpp
     orderbook/orderbook_test.cpp
+
 
     matching-engine/limit_order_test.cpp
 )

@@ -1,5 +1,5 @@
 add_executable(perf_tests
-    shared/dynamic_ringbuffer_perf.cpp
+   temp.cpp
 )
 
 target_include_directories(perf_tests PRIVATE ${CMAKE_SOURCE_DIR}/include)

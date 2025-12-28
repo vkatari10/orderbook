@@ -12,7 +12,7 @@ using std::uint64_t, std::uint8_t;
     when dequeueing or peeking from an empty ring buffer
     it is up to caller to properly check if the buffer
     contains any elements or is not empty before calling 
-    these methods
+    those mentioned methods. 
 */
 template <typename T, uint64_t SIZE>
 class RingBuffer {

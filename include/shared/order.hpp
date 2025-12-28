@@ -43,6 +43,20 @@ struct Order {
         oid(order_id),
         recv_time(order_time_placed),
         alive(1)
+        /*
+        Additional post-MVP 
+
+        original qty (oqty)
+        - tracks original qty since the qty field is mutated
+        throughout its lifetime 
+
+        alive -> status
+
+        we will add new status fields for orders check docs/order.md
+
+
+
+         */
     {} 
 
     friend std::ostream& operator<<(std::ostream& os, const Order& order) {

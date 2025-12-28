@@ -5,63 +5,10 @@
 
 void MatchingEngine::process(Order& order) {
     if (order.order_type == OrderType::LIMIT) {
-        handle_limit_(order);
+        handle_LMT_(order);
     } else if (order.order_type == OrderType::MARKET) {
-        handle_market_(order);
+        // handle_market_(order);
     }
-}
-
-void MatchingEngine::handle_market_(Order& order) {
-    if (order.side == Side::BUY) { // walk down the asks if possible for each qty possible
-
-    } else { // Side::SELL
-
-    }
-}
-
-void MatchingEngine::handle_limit_(Order& order) {
-    if (order.side == Side::BUY) {
-        if (order.price >= orderbook_.best_ask()) { // can match
-            ledger_.push_back(match_limit_order_(order, orderbook_.best_ask_order(), Side::BUY));
-            on_order_qty_zero_(order);
-            on_order_qty_zero_(orderbook_.best_ask_order());
-        } else {
-            orderbook_.add_order(order);
-        }
-    } else { // Side::SELL
-        if (order.price <= orderbook_.best_bid()) {
-            ledger_.push_back(match_limit_order_(orderbook_.best_bid_order(), order, Side::SELL));
-            on_order_qty_zero_(order);
-            on_order_qty_zero_(orderbook_.best_bid_order());
-        } else {
-            orderbook_.add_order(order);
-        }
-    }
-}
-
-Trade MatchingEngine::match_limit_order_(
-    Order& bid_order, 
-    Order& ask_order, 
-    Side aggressor) {
-
-        uint64_t filled_qty{ std::min(bid_order.qty, ask_order.qty) };
-        bid_order.qty -= filled_qty;
-        ask_order.qty -= filled_qty;
-
-        uint64_t fill_price{
-            (aggressor == Side::BUY) 
-            ? std::min(bid_order.price, ask_order.price) 
-            : std::max(bid_order.price, ask_order.price)
-        };
-        
-        if (aggressor == Side::BUY) {
-            on_part_fill_aggressive_limit_order_(bid_order);
-        } else {
-            on_part_fill_aggressive_limit_order_(ask_order);
-        }
-
-        last_price_ = fill_price;
-        return create_trade_(bid_order, ask_order, filled_qty, fill_price);
 }
 
 Trade MatchingEngine::create_trade_(
@@ -81,16 +28,182 @@ Trade MatchingEngine::create_trade_(
     );
 }
 
-void MatchingEngine::on_order_qty_zero_(Order& order) {
-    if (order.qty > 0) return;
-    std::cout << "removing order with id: " << order.oid << "\n";
-    orderbook_.remove_order(order.price, order.side);
+void MatchingEngine::handle_LMT_(Order& order) {
+    if (order.side == Side::BUY) {
+        match_LMT_buy_(order);
+    } else { // Side::SELL
+        match_LMT_sell_(order);
+    }
 }
 
-void MatchingEngine::on_part_fill_aggressive_limit_order_(Order& order) {
+void MatchingEngine::match_LMT_buy_(Order& order) {
+
+    auto it{ orderbook_.asks().begin() };
+    // it->first = price
+    // it->second = PriceLevel&
+
+
+    while (it != orderbook_.asks().end() && order.qty > 0) { 
+        if (it->first > order.price) {  
+            // add what ever is left on the order
+            // useful for init of orderbook if this is the first order coming in 
+            on_partial_fill_aggressive_limit_(order);
+            return;
+        }
+
+        while(!it->second.empty() && order.qty > 0) {
+
+            Order& match = it->second.front(); // first order at this price 
+            PriceLevel& level = it->second;
+
+            if (match.alive == 0) { // if order dead
+                level.pop_front();
+                continue;
+            }
+
+            const uint64_t filled_qty{ std::min(order.qty, match.qty) };
+            const uint64_t fill_price{ match.price };
+
+            ledger_.emplace_back(
+                create_trade_(order, match, filled_qty, fill_price)
+            );
+
+            match.qty -= filled_qty;
+            order.qty -= filled_qty;
+
+            match.alive = 0; // set  order to dead since match complete 
+            orderbook_.remove_order_ptr(match.oid);
+            
+            level.qty_count_ -= filled_qty;
+
+            if (match.qty == 0) level.pop_front(); // if this first order is empty
+        } 
+
+        ++it; // move to next price
+    } 
+
+    // if partial fill occurred
+    on_partial_fill_aggressive_limit_(order);
+}
+
+void MatchingEngine::match_LMT_sell_(Order& order) {
+
+    auto it{ orderbook_.bids().begin() };
+
+    while (it != orderbook_.bids().end() && order.qty > 0) { 
+        if (it->first < order.price) {
+            on_partial_fill_aggressive_limit_(order);
+            return;
+        }
+
+        while(!it->second.empty() && order.qty > 0) {
+
+            Order& match = it->second.front();
+            PriceLevel& level = it->second;
+
+            if (match.alive == 0) { // if order dead
+                level.pop_front();
+                continue;
+            }
+
+            uint64_t filled_qty{ std::min(order.qty, match.qty) };
+
+            uint64_t fill_price{ match.price };
+
+            ledger_.emplace_back(
+                create_trade_(order, match, filled_qty, fill_price)
+            );
+
+            match.qty -= filled_qty;
+            order.qty -= filled_qty;
+
+            level.qty_count_ -= filled_qty;
+
+            if (match.qty == 0) level.pop_front();
+        } 
+
+        ++it;
+    } 
+
+    // if partial fill occurred
+    on_partial_fill_aggressive_limit_(order);
+}
+
+void MatchingEngine::on_partial_fill_aggressive_limit_(Order& order) {
+    if (order.qty == 0) return;
+    orderbook_.add_order(order);
+}
+
+
+void MatchingEngine::handle_MKT_(Order& order) {
     if (order.side == Side::BUY) {
-        orderbook_.add_order(order);
+        match_MKT_buy_(order);
     } else { // Side::SELL
-        orderbook_.add_order(order);
+        match_MKT_sell_(order);
     }
+}
+
+void MatchingEngine::match_MKT_buy_(Order& order) {
+
+    auto it{ orderbook_.asks().begin() };
+
+    while(it != orderbook_.asks().end() && order.qty > 0) {
+
+        while (!it->second.empty() && order.qty > 0) {
+
+            PriceLevel& level = it->second;
+            Order& match = level.front();
+
+            if (match.alive == 0) {
+                level.pop_front();
+                continue;
+            }
+
+            const uint64_t filled_qty{ std::min(order.qty, match.qty) };
+            const uint64_t fill_price{ match.price };
+            ledger_.emplace_back(
+                create_trade_(order, match, filled_qty, fill_price)
+            );
+
+            match.qty -= filled_qty;
+            order.qty -= filled_qty;
+            
+            level.qty_count_ -= filled_qty;
+
+            if (match.qty == 0) level.pop_front();
+        }
+
+    } 
+}
+
+void MatchingEngine::match_MKT_sell_(Order& order) {
+
+    auto it{ orderbook_.bids().begin() };
+
+    while(it != orderbook_.bids().end() && order.qty > 0) {
+
+        while (!it->second.empty() && order.qty > 0) {
+
+            PriceLevel& level = it->second;
+            Order& match = level.front();
+
+            if (match.alive == 0) {
+                level.pop_front();
+                continue;
+            }
+
+            const uint64_t filled_qty{ std::min(order.qty, match.qty) };
+            const uint64_t fill_price{ match.price };
+            ledger_.emplace_back(
+                create_trade_(order, match, filled_qty, fill_price)
+            );
+
+            match.qty -= filled_qty;
+            order.qty -= filled_qty;
+            
+            level.qty_count_ -= filled_qty;
+
+            if (match.qty == 0) level.pop_front();
+        }
+    } 
 }

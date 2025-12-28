@@ -42,10 +42,10 @@ TEST(MATCH_ENG_limit_order_test, test_diff_qty) {
     em.process(sellside);
     em.process(buyside);
 
-    EXPECT_EQ(me.orderbook().bids().at(10).item_count(), 0);
-    EXPECT_EQ(me.orderbook().asks().at(10).item_count(), 1);
-    EXPECT_EQ(em.orderbook().bids().at(10).item_count(), 1);
-    EXPECT_EQ(em.orderbook().asks().at(10).item_count(), 0);
+    EXPECT_EQ(me.orderbook().bids().at(10).order_count(), 0);
+    EXPECT_EQ(me.orderbook().asks().at(10).order_count(), 1);
+    EXPECT_EQ(em.orderbook().bids().at(10).order_count(), 1);
+    EXPECT_EQ(em.orderbook().asks().at(10).order_count(), 0);
 }
 
 TEST(MATCH_ENG_limit_order_test, test_same_qty) {
@@ -103,8 +103,9 @@ TEST(MATCH_ENG_limit_order_test, test_same_qty) {
     std::cout << em.orderbook() << "\n";
 
     // make sure orders erased from order book 
-    EXPECT_EQ(me.orderbook().asks().at(10).item_count(), 0);
-    EXPECT_EQ(me.orderbook().bids().at(10).item_count(), 0);
-    EXPECT_EQ(em.orderbook().asks().at(10).item_count(), 0);
-    EXPECT_EQ(em.orderbook().bids().at(10).item_count(), 0);
+    EXPECT_EQ(me.orderbook().bids().at(10).order_count(), 0);
+    EXPECT_EQ(em.orderbook().asks().at(10).order_count(),0);
+
+    EXPECT_EQ(me.orderbook().bids().at(10).total_shares(), 0);
+    EXPECT_EQ(em.orderbook().asks().at(10).total_shares(), 0);
 }

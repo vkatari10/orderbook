@@ -1,59 +1,59 @@
+#include "orderbook/orderbook.hpp"
+
 #include <algorithm>
 #include <ostream>
 
-#include "orderbook/orderbook.hpp"
-
 void OrderBook::add_order(Order order) {
     if (order.side == Side::BUY) { // convert to branchless later (hashmap with ref to bids/asks)
-        bids_[order.price].enqueue(std::move(order)); // putting order into orderbook
-
         // k, v: oid : last item in orderbook at that price in the ring buffer
         orders_[order.oid] = bids_[order.price].back_ptr(); 
+        bids_[order.price].push_back(std::move(order)); // putting order into orderbook
     } else {
-        asks_[order.price].enqueue(std::move(order));
         orders_[order.oid] = asks_[order.price].back_ptr();
+        asks_[order.price].push_back(std::move(order));
     }
-}
+}  
 
 void OrderBook::cancel_order(const Order& order) {
-    auto it = orders_.find(order.oid);
-    if (it == orders_.end()) return;
+    if (order.alive == 0) return; // order already dead or filled 
+    auto order_it = orders_.find(order.oid);
+    if (order_it == orders_.end()) return; // order DNE
 
-    it->second->alive = 0;
-    orders_.erase(it);
-}
+    order_it->second->alive = 0; // set to dead 
+    orders_.erase(order_it); // erase from lookup map 
 
-void OrderBook::remove_order(uint64_t price_level, Side side) {    
-    if (side == Side::BUY) {
-        orders_.erase(bids_[price_level].peek().oid);
-        bids_[price_level].dequeue();
-    } else {    
-        orders_.erase(asks_[price_level].peek().oid);
-        asks_[price_level].dequeue();
+    if (order.side == Side::BUY) { // decrease qty at price level
+        bids_.at(order.price).qty_count_ -= order.qty;
+    } else {
+        asks_.at(order.price).qty_count_ -= order.qty;
     }
 }
 
-// TODO: replace std::endl with "\n" later, left endl for debug purposes
+void OrderBook::remove_order_ptr(uint64_t id) { 
+    auto it = orders_.find(id);
+    if (it != orders_.end()) orders_.erase(id);
+}
+
+
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
-    os << "BIDS" << std::endl;
-    os << std::endl;
+    os << "BIDS" << "\n";
+    os << "\n";
 
     for (const auto& [k, v] : ob.bids()) {
-        os << "For Price Level: " << k << std::endl;
-        os << std::endl;
-        os << v << std::endl;
-        os << std::endl;
+        os << "For Price Level: " << k << "\n";
+        os << "\n";
+        os << v << "\n";
+        os << "\n";
     }  
 
-    os << "ASKS" << std::endl;
-    os << std::endl;
+    os << "ASKS" << "\n";
+    os << "\n";
 
     for (const auto& [k, v] : ob.asks()) {
         if (k == std::numeric_limits<uint64_t>::max()) continue;
-        os << "Price Level: " << k << std::endl;
-        os << std::endl;
-        os << v << std::endl;
+        os << "Price Level: " << k << "\n";
+        os << "\n";
+        os << v << "\n";
     }
     return os;
 }
-

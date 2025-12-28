@@ -35,8 +35,9 @@ int main() {
     );
 
 
-    me.process(sellside);
+    
     me.process(buyside);
+    me.process(sellside);
    
     for (const auto i : me.ledger()) {
         cout << i << NL;

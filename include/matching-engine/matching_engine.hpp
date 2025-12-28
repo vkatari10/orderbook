@@ -64,21 +64,6 @@ private:
     RingBuffer<Order, Config::MATCH_ENGINE_INBOUND_RING_BUF_SIZE> orders_; // incoming orders 
     OrderBook orderbook_; 
 
-    /** 
-     * @brief handles market orders
-     * 
-     * @param order the order to handle 
-     */
-    void handle_market_(Order& order);
-
-    /** 
-     * @brief handles limit orders pushes trade to ledger if 
-     * order can be matched
-     * 
-     * @param order the order to handle 
-     */
-    void handle_limit_(Order& order);
-
     /**
      * @brief creates a trade object given a bid and ask order that 
      * have been matched
@@ -96,40 +81,33 @@ private:
         uint64_t trade_price
     );
 
-    /**
-     * @brief matches two given limit orders as much as possible  
-     * 
-     * @param bid_order the order on the bidding side
-     * @param ask_order the order on the asking side
-     * @param aggressor the aggressive order side that initiated the match 
-     * @return Trade object that contains information about filled qty and more 
-     */
-    Trade match_limit_order_(
-        Order& bid_order, 
-        Order& ask_order, 
-        Side aggressor
-    );
+    /** @brief handle for limit orders */
+    void handle_LMT_(Order& order);
 
-    /**
-     * @brief matches a market order 
-     * 
-     * @param order the order to match 
-     */
-    Trade match_market_order_(Order& order);
+    /** @brief handle for market orders */
+    void handle_MKT_(Order& order);
 
-    /**
-     * @brief removes an order from the orderbook if its qty is zero 
-     * 
-     * @param order the order to check if eligible for remove
-     */
-    void on_order_qty_zero_(Order& order);
+    /** @brief handle for FOK orders */
+    void handle_FOK_(Order& order);
 
-    /**
-     * @brief will push an aggressive limit order that was
-     * partially filled back into the orderbook 
-     * 
-     * @param order the aggressive limit order that was partially filled
-     */
-    void on_part_fill_aggressive_limit_order_(Order& order);
-        
+    /** @brief matching algo for limit buy side orders */
+    void match_LMT_buy_(Order& order);
+
+    /** @brief matching algo for limit sell side orders */
+    void match_LMT_sell_(Order& order);
+
+    /** @brief matching algo for market buy side orders */
+    void match_MKT_buy_(Order& aggressive);
+
+    /** @brief matching algo for market sell side orders */
+    void match_MKT_sell_(Order& aggressive);
+
+    /** @brief matching algo for FOK buy side orders */
+    void match_FOK_buy_(Order& aggressive);
+
+    /** @brief matching algo for FOK sell side orders */
+    void match_FOK_sell_(Order& aggressive);
+
+    /** @brief adds a partially filled aggressive LMT order back to the orderbook */
+    void on_partial_fill_aggressive_limit_(Order& order);
 }; 

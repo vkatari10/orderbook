@@ -9,7 +9,7 @@
 #include "shared/order.hpp"
 #include "shared/trade.hpp"
 #include "shared/enums.hpp"
-#include "shared/ringbuffer.hpp"
+#include "shared/pricelevel.hpp"
 #include "shared/config.hpp"
 
 using std::uint64_t; 
@@ -45,52 +45,41 @@ public:
     void cancel_order(const Order& order);
 
     /**
-     * @brief removes an order from the orderbook at a given price level
+     * @brief removes the order pointer in the orders_
+     * variable
      * 
-     * @param price_level the price level for which the order should be removed 
+     * @param id the id of the order, must exist 
      */
-    void remove_order(uint64_t price_level, Side side);
+    void remove_order_ptr(uint64_t id); 
 
     /** @brief operator overload for std::cout */
     friend std::ostream& operator<<(std::ostream& os, const OrderBook& ob);
 
     /** @brief return orderbook ticker */
+    std::string& ticker() { return ticker_; }
     const std::string& ticker() const { return ticker_; } 
 
     /** @brief return orderbook bids */
-    const std::map<uint64_t, RingBuffer<Order, Config::ORDERBOOK_RING_BUF_SIZE>, std::greater<uint64_t>>& bids() const { return bids_; }
+    std::map<uint64_t, PriceLevel, std::greater<uint64_t>>& bids() { return bids_; }
+    const std::map<uint64_t, PriceLevel, std::greater<uint64_t>>& bids() const { return bids_; }
 
     /** @brief return orderbook asks */
-    const std::map<uint64_t, RingBuffer<Order, Config::ORDERBOOK_RING_BUF_SIZE>>& asks() const { return asks_; }
+    std::map<uint64_t, PriceLevel>& asks() { return asks_; }
+    const std::map<uint64_t, PriceLevel>& asks() const { return asks_; }
 
     /** @brief return map of order id's to pointers of orders for all current orders */
-    const std::map<uint64_t, Order*>& orders() const { return orders_; } 
+    std::map<uint64_t, Order*>& orders() { return orders_; } 
+    const std::map<uint64_t, Order*>& orders() const { return orders_; }
 
     /** @brief returns the best asking price */
-    uint64_t best_ask() const {
-        auto it = asks_.begin();
-        return it->first;
-    }
+    uint64_t best_ask() const { return asks_.begin()->first; }
 
     /** @brief returns the best bidding price */
-    uint64_t best_bid() const {
-        auto it = bids_.begin();
-        return it->first;
-    }
-
-    Order& best_ask_order() {
-        auto it = asks_.begin();
-        return it->second.peek();
-    }
-
-    Order& best_bid_order() {
-        auto it = bids_.begin();
-        return it->second.peek();
-    }
+    uint64_t best_bid() const { return bids_.begin()->first; }
 
 private:
-    std::map<uint64_t, RingBuffer<Order, Config::ORDERBOOK_RING_BUF_SIZE>, std::greater<uint64_t>> bids_; // min heap 
-    std::map<uint64_t, RingBuffer<Order, Config::ORDERBOOK_RING_BUF_SIZE>> asks_;
+    std::map<uint64_t, PriceLevel, std::greater<uint64_t>> bids_; // min heap 
+    std::map<uint64_t, PriceLevel> asks_;
     std::map<uint64_t, Order*> orders_;
     std::string ticker_; // orderbook identifier    
 };
