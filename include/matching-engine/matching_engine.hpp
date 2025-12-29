@@ -17,7 +17,7 @@ public:
         last_price_(0),
         ledger_({}),
         orders_(),
-        orderbook_(ticker) {};
+        orderbook_(ticker) {}
 
     /** 
      * @brief entry point for all orders entering the matching engine
@@ -51,8 +51,6 @@ public:
     /** @brief returns the inbound ring buffer */
     const RingBuffer<Order, Config::MATCH_ENGINE_INBOUND_RING_BUF_SIZE> orders() const { return orders_; }
 
-    
-
 private:
 
     uint64_t last_price_; // last market trade price 
@@ -83,14 +81,26 @@ private:
         uint64_t trade_price
     );
 
+    // MAIN (TIF) HANDLES
+
+    /** @brief handle for day orders */
+    void handle_DAY_(Order& order);
+
+    /** @brief handle for IOC orders */
+    void handle_IOC_(Order& order);
+
+    /** @brief handle for FOK orders */
+    void handle_FOK_(Order& order);
+
+    // MATCHING HANDLES
+
     /** @brief handle for limit orders */
     void handle_LMT_(Order& order);
 
     /** @brief handle for market orders */
     void handle_MKT_(Order& order);
 
-    /** @brief handle for FOK orders */
-    void handle_FOK_(Order& order);
+    // MATCHING ALGOS
 
     /** @brief matching algo for limit buy side orders */
     void match_LMT_buy_(Order& order);
@@ -99,16 +109,26 @@ private:
     void match_LMT_sell_(Order& order);
 
     /** @brief matching algo for market buy side orders */
-    void match_MKT_buy_(Order& aggressive);
+    void match_MKT_buy_(Order& order);
 
     /** @brief matching algo for market sell side orders */
-    void match_MKT_sell_(Order& aggressive);
+    void match_MKT_sell_(Order& order);
 
-    /** @brief matching algo for FOK buy side orders */
-    void match_FOK_buy_(Order& aggressive);
+    /** 
+     * @brief matching algo for limit buy side orders that do 
+     * not push partial fill orders to the orderbook, used for 
+     * immediately executing limit orders (FOK, IOC, etc.)
+     */
+    void match_LMT_buy_no_push_(Order& order);   
 
-    /** @brief matching algo for FOK sell side orders */
-    void match_FOK_sell_(Order& aggressive);
+    /** 
+     * @brief matching algo for limit sell side orders that do 
+     * not push partial fill orders to the orderbook, used for 
+     * immediately executing limit orders (FOK, IOC, etc.)
+     */
+    void match_LMT_sell_no_push_(Order& order);
+
+    // HELPERS
 
     /** @brief adds a partially filled aggressive LMT order back to the orderbook */
     void on_partial_fill_aggressive_limit_(Order& order);

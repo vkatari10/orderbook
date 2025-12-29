@@ -12,11 +12,9 @@ enum struct OrderType : uint8_t {
 };
 
 enum struct TIF : uint8_t { 
-    DAY = 0, 
-    GTD = 1,
-    GTC = 2,
-    FOK = 3, 
-    IOC = 4
+    DAY = 0,
+    FOK = 1, 
+    IOC = 2
 };
 
 enum struct Trigger : uint8_t { 

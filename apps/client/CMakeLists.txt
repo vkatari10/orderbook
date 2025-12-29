@@ -1,1 +1,0 @@
-add_executable(client_app client.cpp)

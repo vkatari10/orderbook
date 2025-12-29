@@ -19,7 +19,7 @@ struct Order {
       recv_time(0),
       side(Side::BUY),
       order_type(OrderType::MARKET),
-      tif(TIF::GTD),
+      tif(TIF::DAY),
       ticker(),
       status(0)
     {}
@@ -70,8 +70,4 @@ struct Order {
     uint64_t oid; // order (specific) id
     uint64_t recv_time; // time order was placed
     uint8_t status; // see docs/order.md 
-
-
-
-  
 };

@@ -12,7 +12,7 @@
 #include "shared/pricelevel.hpp"
 #include "shared/config.hpp"
 
-using std::uint64_t; 
+using std::uint64_t, std::uint8_t; 
 
 class OrderBook {
 public:
@@ -77,14 +77,50 @@ public:
     /** @brief returns the best bidding price */
     uint64_t best_bid() const { return bids_.begin()->first; }
 
-    /** @brief returns the total numbers of ask shares  */
-    uint64_t asks_total_shares() const;
+    /**
+     * @brief checks asking side to see if a given amount 
+     * of shares are available 
+     * 
+     * @param shares the number of shares to check
+     * @return 1 if there are more or equivalent number of 
+     * asking shares, else 0
+     */
+    uint8_t check_ask_shares_ge(uint64_t shares) const; 
 
-    /** @brief returns the total number of bid shares */
-    uint64_t bids_total_shares() const;
+     /**
+     * @brief checks bidding side to see if a given amount 
+     * of shares are available 
+     * 
+     * @param shares the number of shares to check
+     * @return 1 if there are more or equivalent number of 
+     * asking shares, else 0
+     */
+    uint8_t check_bid_shares_ge(uint64_t shares) const;
+
+    /**
+     * @brief checks bidding side to see if a given amount 
+     * of shares are available as the limit price or better
+     * 
+     * @param shares the number of shares to check
+     * @param limit the limit price to check 
+     * @return 1 if there are more or equivalent number of 
+     * asking shares, else 0
+     */
+    uint8_t check_bid_shares_limit_ge(uint64_t shares, uint64_t limit) const;
+
+    /**
+     * @brief checks asking side to see if a given amount 
+     * of shares are available as the limit price or better
+     * 
+     * @param shares the number of shares to check
+     * @param limit the limit price to check 
+     * @return 1 if there are more or equivalent number of 
+     * asking shares, else 0
+     */
+    uint8_t check_ask_shares_limit_ge(uint64_t shares, uint64_t limit) const; 
 
 private:
-    std::map<uint64_t, PriceLevel, std::greater<uint64_t>> bids_; // min heap 
+    std::map<uint64_t, PriceLevel, std::greater<uint64_t>> bids_; 
     std::map<uint64_t, PriceLevel> asks_;
     std::map<uint64_t, Order*> orders_;
     std::string ticker_; // orderbook identifier    

@@ -44,3 +44,6 @@
 build/*
 vcpkg/*
 vcpkg_installed/*
+
+# python
+broker/.venv/*

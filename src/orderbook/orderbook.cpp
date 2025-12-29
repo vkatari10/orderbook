@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <ostream>
 
+using std::uint64_t, std::uint8_t; 
+
 void OrderBook::add_order(Order order) {
     if (order.side == Side::BUY) { // convert to branchless later (hashmap with ref to bids/asks)
         // k, v: oid : last item in orderbook at that price in the ring buffer
@@ -34,24 +36,55 @@ void OrderBook::remove_order_ptr(uint64_t id) {
     if (it != orders_.end()) orders_.erase(id);
 }
 
-uint64_t OrderBook::asks_total_shares() const {
+uint8_t OrderBook::check_ask_shares_ge(uint64_t shares) const { 
     auto it = asks_.begin();
-    uint64_t shares{};
-    while(it != asks_.end()) { 
-        shares += it->second.total_shares();
+    uint64_t counted_shares = 0;
+    while (it != asks_.end()) { 
+        counted_shares += it->second.total_shares();
+        if (counted_shares >= shares) return 1;
+        ++it;
     }
-    return shares;
+    return 0;
 }
 
-uint64_t OrderBook::bids_total_shares() const {
-    auto it = asks_.begin();
-    uint64_t shares{};
-    while(it != bids_.end()) { 
-        shares += it->second.total_shares();
+uint8_t OrderBook::check_bid_shares_ge(uint64_t shares) const { 
+    auto it = bids_.begin();
+    uint64_t counted_shares = 0;
+    while (it != bids_.end()) { 
+        counted_shares += it->second.total_shares();
+        if (counted_shares >= shares) return 1;
+        ++it;
     }
-    return shares;
+    return 0;
 }
 
+uint8_t OrderBook::check_ask_shares_limit_ge(uint64_t shares, uint64_t limit) const {
+    auto it = asks_.begin();
+    uint64_t counted_shares = 0;
+    while (it != asks_.end()) {
+        if (it->first > limit && counted_shares >= shares) return 1;
+        if (it->first > limit && counted_shares < shares) return 0; 
+
+        counted_shares += it->second.total_shares();
+        if (counted_shares >= shares) return 1;
+        ++it;
+    }   
+    return 0;
+}
+
+uint8_t OrderBook::check_bid_shares_limit_ge(uint64_t shares, uint64_t limit) const {
+    auto it = bids_.begin();
+    uint64_t counted_shares = 0;
+    while (it != bids_.end()) {
+        if (it->first < limit && counted_shares >= shares) return 1;
+        if (it->first < limit && counted_shares < shares) return 0; 
+
+        counted_shares += it->second.total_shares();
+        if (counted_shares >= shares) return 1;
+        ++it;
+    }   
+    return 0;
+}
 
 std::ostream& operator<<(std::ostream& os, const OrderBook& ob) {
     os << "BIDS" << "\n";
