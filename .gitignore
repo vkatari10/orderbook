@@ -45,5 +45,14 @@ build/*
 vcpkg/*
 vcpkg_installed/*
 
-# python
+# python 
 broker/.venv/*
+broker/__pycache__/*
+__pycache__/*
+.venv/*
+
+# quickfix 
+Logs/*
+Sessions/*
+*.log
+src/store

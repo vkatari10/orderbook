@@ -31,6 +31,10 @@ endif()
 set(CMAKE_CXX_STANDARD 20) # equivalent to -std=c++20
 set(CMAKE_CXX_FLAGS_DEBUG "-g -O0") # switch to -O2 later
 
+# src/ 
 add_subdirectory(src/orderbook)
 add_subdirectory(src/matching-engine)
+add_subdirectory(src/gateway)
+
+# executables
 add_subdirectory(apps/server)

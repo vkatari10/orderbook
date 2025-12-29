@@ -2,49 +2,25 @@
 
 #include <matching-engine/matching_engine.hpp>
 
+
 #define NL "\n" 
 using std::cout;
 
-int main() {
-    
-    MatchingEngine me("XYZ");
-   
+#include <gateway/gateway.hpp>
+#include "quickfix/SocketAcceptor.h"
+#include "quickfix/FileStore.h"
+#include "quickfix/FileLog.h"
+#include "quickfix/SessionSettings.h"
 
-    Order buyside = Order(
-        Side::SELL, 
-        OrderType::LIMIT,
-        TIF::DAY,
-        "XYZ",
-        10, // price
-        10,
-        10,
-        987654321,
-        10,
-        1
-    );
+int main(int argc, char** argv) {
+    FIX::SessionSettings settings("apps/server/gateway.cfg");
+    Gateway app;
+    FIX::FileStoreFactory storeFactory(settings);
+    FIX::FileLogFactory logFactory(settings);
+    FIX::SocketAcceptor acceptor(app, storeFactory, settings, logFactory);
 
-     Order sellside = Order(
-        Side::BUY, 
-        OrderType::MARKET,
-        TIF::DAY,
-        "XYZ",
-        10,
-        10,
-        10,
-        987654321,
-        10,
-        1
-    );
-
-
-    
-
-    
-    me.process(buyside);
-    me.process(sellside);
-
-    cout << "ledger size atm: " <<  me.ledger().size() << NL;
-
-    cout << "orderbook: " << NL << me.orderbook() << NL;
-
+    acceptor.start();
+    std::cout << "Exchange acceptor running..." << std::endl;
+    std::cin.get();  // wait for Enter
+    acceptor.stop();
 }

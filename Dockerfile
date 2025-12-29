@@ -33,6 +33,8 @@ RUN chown -R dev:dev /vcpkg
 
 USER dev
 
+EXPOSE 5001
+
 COPY . .
 
 CMD ["bash"]
