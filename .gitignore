@@ -51,8 +51,15 @@ broker/__pycache__/*
 __pycache__/*
 .venv/*
 
+src/broker/.venv/*
+src/broker/__pycache__/*
+src/broker/Sessions/*
+src/broker/Logs/*
+
+
 # quickfix 
 Logs/*
 Sessions/*
 *.log
-src/store
+store/
+
