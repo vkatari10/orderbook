@@ -6,8 +6,36 @@ file
 import quickfix as fix
 import time
 from datetime import datetime
+import order as ord
 
 SOH = chr(1)
+VALID_SIDES = ["BUY", "SELL"]
+VALID_ORDER_TYPES = ["MARKET", "LIMIT"]
+VALID_TIF = ["DAY", "FOK", "IOC"]
+
+SIDE_MAP = {
+    "BUY": fix.Side_BUY, 
+    "SELL": fix.Side_SELL
+}
+
+ORDER_TYPE_MAP = {
+    "MARKET": fix.OrdType_MARKET,
+    "LIMIT": fix.OrdType_LIMIT
+}
+
+TIF_MAP = {
+    "DAY": fix.TimeInForce_DAY,
+    "FOK": fix.TimeInForce_FILL_OR_KILL,
+    "IOC": fix.TimeInForce_IMMEDIATE_OR_CANCEL
+}
+    
+def check_valid_order_args(side: str, order_type: str, tif: str, 
+                            ticker: str, qty: int, price: float) -> bool:
+    if side not in VALID_SIDES: return False
+    if order_type not in VALID_ORDER_TYPES: return False
+    if tif not in VALID_TIF: return False
+    if qty < 0 or price < 0: return False
+
 
 class Application(fix.Application):
     sessionID = "BROKER1"
@@ -67,15 +95,42 @@ class Application(fix.Application):
         fix.Session.sendToTarget(msg, self.sessionID)
 
 
+    def create_and_send_order(self, side: str, order_type: str, 
+                              tif: str, ticker: str, qty: int, 
+                              price: float) -> None:
+        if check_valid_order_args(
+            side, order_type, tif, ticker, qty, price
+            ):
+                msg = fix.Message()
+                header= msg.getHeader()
+                header.setField(fix.MsgType(fix.MsgType_NewOrderSingle))
+
+                msg.setField(fix.ClOrdID(self.nextClOrdID()))
+                msg.setField(fix.Symbol(ticker))
+                msg.setField(fix.OrderQty(qty))
+                msg.setField(fix.Price(price))
+                msg.setField(fix.Side(SIDE_MAP[side]))
+                msg.setField(fix.OrdType(ORDER_TYPE_MAP[order_type]))
+                msg.setField(fix.TimeInForce(TIF_MAP[tif]))
+
+                tx_time = fix.TransactTime()
+                tx_time.setString(datetime.utcnow().strftime("%Y%m%d-%H:%M:%S.%f")[:-3])
+                msg.setField(tx_time) 
+
+                fix.Session.sendToTarget(msg, self.sessionID)
+        else:
+            pass # reject order here and inform user if fields are invalid 
+            # negative qty, invalid ticker, etc. 
+
+        
 def main():
-    settings = fix.SessionSettings("initiator.cfg")
+    settings = fix.SessionSettings("src/broker/initiator.cfg")
 
     app = Application()
     store = fix.FileStoreFactory(settings)
     log = fix.FileLogFactory(settings)
 
     initiator = fix.SocketInitiator(app, store, settings, log)
-
 
     initiator.start()
     print("Initiator started")

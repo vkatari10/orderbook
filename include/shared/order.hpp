@@ -7,6 +7,8 @@
 
 #include "enums.hpp"
 
+using std::uint64_t, std::uint8_t;
+
 struct Order {
     
     // DO NOT use this to construct ORDER objects,
@@ -69,5 +71,7 @@ struct Order {
     uint64_t cid; // client id 
     uint64_t oid; // order (specific) id
     uint64_t recv_time; // time order was placed
+
+    // used internally 
     uint8_t status; // see docs/order.md 
 };

@@ -2,7 +2,7 @@
     "name": "orderbook",
     "version": "1.0.0",
     "dependencies": [
-        "fmt",
+        "concurrentqueue",
         "quickfix",
         "gtest",
         "benchmark"

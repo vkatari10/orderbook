@@ -57,14 +57,42 @@ void Gateway::onMessage(const FIX44::NewOrderSingle& msg, const FIX::SessionID&)
     msg.getField(qty);
     msg.getField(ordType);
     msg.getField(symbol);
+    msg.getField(tif);
 
-    o.oid = std::stoull(clOrdID.getValue());  // or map to internal seq
-    o.cid = 0;                           // assign based on sessionID
-    o.side = Side::BUY; // replace one we know what the actual code is 
-    o.qty = static_cast<int>(qty.getValue());
-    o.order_type = OrderType::LIMIT; // replace with actual val or modify enum to match 
-    if (ordType.getValue() == FIX::OrdType_LIMIT)
-        msg.getField(price), o.price = price.getValue();
+    o.recv_time = get_time_ms();
+    
+    // TODO assign order id 
+    o.oid =  0; // SEQUENCER MUST ASSIGN THE VALUE HERE TO THE ORDER ID 
+    o.cid = std::stoull(clOrdID.getValue());                  // assign based on sessionID
+    
+    if (side.getValue() == FIX::Side_BUY) {
+        o.side = Side::BUY;
+    } else if (side.getValue() == FIX::Side_SELL) {
+        o.side = Side::SELL;
+    }
+
+    o.qty = double_to_uint64_t(qty.getValue());
+
+    if (ordType.getValue() == FIX::OrdType_LIMIT) {
+        o.order_type = OrderType::LIMIT;
+        msg.getField(price);
+        o.price = price.getValue();
+    } else if (ordType.getValue() == FIX::OrdType_MARKET) {
+        o.order_type = OrderType::MARKET;
+    }
+
+    if (tif.getValue() == FIX::TimeInForce_DAY) {
+        o.tif = TIF::DAY;
+    } else if (tif.getValue() == FIX::TimeInForce_FILL_OR_KILL) { 
+        o.tif = TIF::FOK;
+    } else if (tif.getValue() == FIX::TimeInForce_IMMEDIATE_OR_CANCEL) {
+        o.tif = TIF::IOC;
+    }
+
+    o.ticker = symbol.getValue();
+
+    o.status = 1;
+
     if (msg.isSetField(FIX::FIELD::TimeInForce))
         msg.getField(tif), o.tif = TIF::DAY;
 
@@ -76,7 +104,7 @@ void Gateway::onMessage(const FIX44::NewOrderSingle& msg, const FIX::SessionID&)
               << " tif=" << static_cast<int>(o.tif)
               << std::endl;
 
-    // TODO: submit to sequencer / matching engine
+    // TODO: send to order ring buffer that feeds to matching engines
 }
 
 // ---- OrderCancelRequest handler ----

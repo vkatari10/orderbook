@@ -57,4 +57,4 @@ struct Trade {
     uint64_t price;
     int8_t return_code; // internal
     std::string ticker;
-};
+};  

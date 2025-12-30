@@ -7,4 +7,5 @@ target_link_libraries(server_app PRIVATE
     matching_engine
     quickfix
     gateway
+    exchange
 )

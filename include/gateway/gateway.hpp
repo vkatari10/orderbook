@@ -6,8 +6,11 @@
 #include <quickfix/fix44/OrderCancelRequest.h>
 #include <iostream>
 #include <string>
+#include <cstdint>
 
 #include "shared/order.hpp"
+#include "shared/utilities.hpp"
+#include "shared/cancel.hpp"
 
 class Gateway: public FIX::Application, public FIX::MessageCracker
 {
